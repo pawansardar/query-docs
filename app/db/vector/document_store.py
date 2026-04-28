@@ -1,5 +1,6 @@
 from qdrant_client.models import Distance, VectorParams, PointStruct
 import uuid
+from app.core.logging import get_logger
 
 class DocumentVectorStore:
     def __init__(self, client, vector_size: int = 3072):
@@ -7,6 +8,7 @@ class DocumentVectorStore:
         self.collection_name = "documents"
         self.vector_size = vector_size
         self._ensure_collection()
+        self.logger = get_logger(__name__)
     
     def _ensure_collection(self):
         if not self.client.collection_exists(self.collection_name):
@@ -22,12 +24,12 @@ class DocumentVectorStore:
         points = []
 
         if len(texts) != len(embeddings):
-            raise ValueError("[ERROR] Mismatch between texts and embeddings")
+            raise ValueError("Mismatch between texts and embeddings")
 
         try:
             for i, (text, vector) in enumerate(zip(texts, embeddings)):
                 if len(vector) != self.vector_size:
-                    raise ValueError(f"[ERROR] Expected vector of size {self.vector_size} but got {len(vector)}")
+                    raise ValueError(f"Expected vector of size {self.vector_size} but got {len(vector)}")
                 
                 points.append(
                     PointStruct(
@@ -42,7 +44,7 @@ class DocumentVectorStore:
                     )
                 )
             
-            print(f"[DEBUG] Adding {len(points)} documents to collection {self.collection_name}")
+            self.logger.info("Adding documents to collection", extra={"file_name": file_name, "points_size": len(points), "collection_name": self.collection_name})
 
             batch_size = 100
 
@@ -54,10 +56,10 @@ class DocumentVectorStore:
                     points=batch
                 )
                 
-                print(f"[DEBUG] Added {len(batch)} documents to collection {self.collection_name}")
+                self.logger.info("Added documents to database collection", extra={"file_name": file_name, "batch_size": len(batch), "collection_name": self.collection_name})
             
         except Exception as e:
-            print("[ERROR] Exception during add:", e)
+            self.logger.exception("Failed to add documents to collection", extra={"file_name": file_name, "collection_name": self.collection_name})
             raise
     
     def get_all_points_debug(self):

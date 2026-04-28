@@ -43,12 +43,13 @@ query-docs/
 │
 ├── app/
 │   ├── api/                    # FastAPI routes
-│   ├── services/               # Business logic
+│   ├── core/                   # Configurations and settings
 │   ├── db/                     # Qdrant integration
+│   ├── services/               # Business logic
 │   └── main.py                 # Application entry point
 │
-├── docker-compose.yaml         # Utility scripts (ingestion, indexing)
-├── .env.example                # Test cases
+├── docker-compose.yaml         # Docker services configuration
+├── .env.example                # Environment variables template
 ├── requirements.txt
 └── README.md
 ```
@@ -87,7 +88,7 @@ cp .env.example .env
 ## ▶️ Running the Application
 
 ```bash
-fastapi dev
+uvicorn app.main:app --reload
 ```
 
 API will be available at:

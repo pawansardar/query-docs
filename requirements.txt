@@ -2,3 +2,4 @@ qdrant-client
 fastapi["standard"]
 pypdf
 google-genai
+python-json-logger
