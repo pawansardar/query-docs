@@ -1,4 +1,4 @@
-from qdrant_client.models import Distance, VectorParams, PointStruct
+from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue
 import uuid
 from app.core.logging import get_logger
 
@@ -20,7 +20,7 @@ class DocumentVectorStore:
                 )
             )
 
-    def add_documents(self, texts: list[str], embeddings, file_name: str, user_id="user1"):
+    def add_documents(self, texts: list[str], embeddings: list[list[float]], file_name: str, user_id="user1"):
         points = []
 
         if len(texts) != len(embeddings):
@@ -78,4 +78,54 @@ class DocumentVectorStore:
                 break
 
         return all_points
+    
+    def query(self, embedding: list[float], user_id = "user1") -> list[PointStruct]:
+        self.logger.info("Querying collection", extra={"collection_name": self.collection_name})
+        try:
+            search_result = self.client.query_points(
+                collection_name=self.collection_name,
+                query=embedding,
+                query_filter=Filter(
+                    must=[
+                        FieldCondition(
+                            key="user_id",
+                            match=MatchValue(value=user_id)
+                        )
+                    ]
+                ),
+                with_payload=True,
+                with_vectors=False,
+                limit=10
+            ).points
+
+            self.logger.info(
+                "Queried collection",
+                extra={
+                    "collection_name": self.collection_name,
+                    "results": len(search_result),
+                    "top_score": search_result[0].score if search_result else None
+                }
+            )
+
+            self.logger.debug(
+                "Queried collection",
+                extra={
+                    "collection_name": self.collection_name,
+                    "results": [
+                        {
+                            "id": point.id,
+                            "score": point.score,
+                            "file_name": point.payload.get("file_name"),
+                            "text_preview": (point.payload.get("text") or "")[:200]
+                        }
+                        for point in search_result[:5]
+                    ]
+                }
+            )
+
+            return search_result
+        
+        except Exception as e:
+            self.logger.exception("Failed to query collection", extra={"collection_name": self.collection_name})
+            raise
     

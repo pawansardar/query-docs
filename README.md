@@ -45,6 +45,7 @@ query-docs/
 │   ├── api/                    # FastAPI routes
 │   ├── core/                   # Configurations and settings
 │   ├── db/                     # Qdrant integration
+│   ├── schemas/                # Pydantic schemas
 │   ├── services/               # Business logic
 │   └── main.py                 # Application entry point
 │
@@ -107,7 +108,7 @@ http://127.0.0.1:8000
    * Generate embeddings using Gemini models
    * Store vectors in Qdrant
 
-2. **Query Processing (Planned)**
+2. **Query Processing**
 
    * Convert user query into embedding
    * Perform similarity search in Qdrant
